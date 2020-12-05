@@ -35,23 +35,38 @@ class SolarSystem:
             p.plot.set_sizes([p.rad**2])
             plots.append(p.plot)
         self.fuse_objects()
+        print(len(self.objects), end="\r")
         return plots
 
     def fuse_objects(self):
         for p1 in self.objects:
             for p2 in self.objects:
                 if p2 != p1:
+                    # TODO detect when objects are touching
                     u = p2.r - p1.r
                     u_norm = np.sum(u**2)**0.5
                     if u_norm < 0.1:
+                        meq, veq = momentum_conservation(p1.v, p2.v, p1.rad, p2.rad)
                         p1.rad = (p1.rad**2 + p2.rad**2)**0.5
-                        p1.v += 0  # TODO: add conservation of momentum
+                        p1.v = veq
                         p2.rad = 0
                         self.objects.remove(p2)
 
+    def clean_system(self):
+        bound = 3
+        for p in self.objects:
+            if np.sum(p.r**2)**0.5 > bound:
+                self.objects.remove(p)
+
+
+def momentum_conservation(v1, v2, m1, m2):
+    meq = m1 + m2
+    veq = v1 / (1 + m1/m2) + v2 / (1 + m2/m1)
+    return meq, veq
+
 
 fig = plt.figure(figsize=[6, 6])
-max_dim = 1.8
+max_dim = 2
 ax = plt.axes([0., 0., 1., 1.], xlim=(-max_dim, max_dim), ylim=(-max_dim, max_dim))
 ax.set_aspect('equal')
 size_sun = 28
@@ -59,8 +74,8 @@ Sun = Object("sun", rad=size_sun, color='tab:orange', r=[0, 0, 0], v=[0, 0, 0])
 system = SolarSystem(Sun)
 
 # initialise positions and velocities
-for i in range(100):
-    radius = size_sun/2*np.random.uniform(low=0, high=1)
+for i in range(300):
+    radius = size_sun/2*np.random.uniform(low=0, high=0.2)
     pos = np.zeros(3)
     while np.sum(pos**2) < 1:
         pos = max_dim*np.random.uniform(low=-1, high=1, size=3)
