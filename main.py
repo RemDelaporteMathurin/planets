@@ -19,12 +19,21 @@ class SolarSystem:
         self.thesun = thesun
         self.objects = []
         self.time = 0
+        self.mass = 0
+        self.masssstamp = \
+            ax.text(
+                .03, .94, 'Mass: ', color='b',
+                transform=ax.transAxes, fontsize='x-large')
+        self.nb_objectsstamp = \
+            ax.text(
+                .03, .84, 'Objects: ', color='b',
+                transform=ax.transAxes, fontsize='x-large')
 
     def add_object(self, object):
         self.objects.append(object)
 
     def update(self):
-        dt = 0.3
+        dt = 0.5
         self.time += dt
         plots = []
         for p in self.objects:
@@ -35,8 +44,18 @@ class SolarSystem:
             p.plot.set_sizes([p.rad**2])
             plots.append(p.plot)
         self.fuse_objects()
-        print(len(self.objects), end="\r")
-        return plots
+
+        self.clean_system()
+        self.compute_mass()
+        self.masssstamp.set_text('Mass: {:.2f}'.format(self.mass))
+        self.nb_objectsstamp.set_text('Objects: {}'.format(len(self.objects)))
+        return plots + [self.masssstamp, self.nb_objectsstamp]
+
+    def compute_mass(self):
+        mass = 0
+        for p in self.objects:
+            mass += np.pi*p.rad**2
+        self.mass = mass
 
     def fuse_objects(self):
         for p1 in self.objects:
@@ -55,7 +74,7 @@ class SolarSystem:
                         self.objects.remove(p2)
 
     def clean_system(self):
-        bound = 1.5
+        bound = 2
         for p in self.objects:
             if np.sum(p.r**2)**0.5 > bound:
                 self.objects.remove(p)
@@ -92,5 +111,5 @@ if __name__ == "__main__":
     def animate(i):
         return system.update()
 
-    ani = animation.FuncAnimation(fig, animate, repeat=True, frames=200, blit=True, interval=10,)
+    ani = animation.FuncAnimation(fig, animate, repeat=True, frames=200, blit=True, interval=5,)
     plt.show()
