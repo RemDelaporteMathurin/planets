@@ -113,14 +113,14 @@ if __name__ == "__main__":
     system = SolarSystem(Sun)
 
     # initialise positions and velocities
-    for i in range(800):
+    for i in range(1000):
         radius = size_sun/2*np.random.uniform(low=0, high=0.25)
         pos = np.zeros(3)
         while np.sum(pos**2) < 0.25:
             pos = max_dim*np.random.uniform(low=-1, high=1, size=3)
             pos[2] = 0
-
-        v0 = np.random.uniform(low=0, high=0.05)
+        dist = np.linalg.norm(pos)
+        v0 = np.random.uniform(low=0.015, high=0.02)/(dist)**0.5
         vel = v0*np.array([-pos[1], pos[0], 0])/np.sum(pos**2)**0.5
         colour = np.random.uniform(low=0, high=1, size=3)
         obj = Object(str(i), radius, colour, pos, vel)
