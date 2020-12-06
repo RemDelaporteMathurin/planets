@@ -24,7 +24,7 @@ class SolarSystem:
         self.objects.append(object)
 
     def update(self):
-        dt = 0.1
+        dt = 0.3
         self.time += dt
         plots = []
         for p in self.objects:
@@ -46,14 +46,16 @@ class SolarSystem:
                     u_norm = np.sum(u**2)**0.5
                     scaling_factor = 0.06/28
                     if u_norm <= (p1.rad + p2.rad)*scaling_factor:
-                        meq, veq = momentum_conservation(p1.v, p2.v, p1.rad, p2.rad)
-                        p1.rad = (p1.rad**2 + p2.rad**2)**0.5
+                        meq, veq = momentum_conservation(
+                            p1.v, p2.v,
+                            np.pi*p1.rad**2, np.pi*p2.rad**2)
+                        p1.rad = (meq/np.pi)**0.5
                         p1.v = veq
                         p2.rad = 0
                         self.objects.remove(p2)
 
     def clean_system(self):
-        bound = 2
+        bound = 1.5
         for p in self.objects:
             if np.sum(p.r**2)**0.5 > bound:
                 self.objects.remove(p)
@@ -61,35 +63,34 @@ class SolarSystem:
 
 def momentum_conservation(v1, v2, m1, m2):
     meq = m1 + m2
-    veq = v1 / (1 + m1/m2) + v2 / (1 + m2/m1)
+    veq = v1 / (1 + m2/m1) + v2 / (1 + m1/m2)
     return meq, veq
 
 
-fig = plt.figure(figsize=[6, 6])
-max_dim = 1
-ax = plt.axes([0., 0., 1., 1.], xlim=(-max_dim, max_dim), ylim=(-max_dim, max_dim))
-ax.set_aspect('equal')
-size_sun = 28
-Sun = Object("sun", rad=size_sun, color='tab:orange', r=[0, 0, 0], v=[0, 0, 0])
-system = SolarSystem(Sun)
+if __name__ == "__main__":
+    fig = plt.figure(figsize=[6, 6])
+    max_dim = 1
+    ax = plt.axes([0., 0., 1., 1.], xlim=(-max_dim, max_dim), ylim=(-max_dim, max_dim))
+    ax.set_aspect('equal')
+    size_sun = 28
+    Sun = Object("sun", rad=size_sun, color='tab:orange', r=[0, 0, 0], v=[0, 0, 0])
+    system = SolarSystem(Sun)
 
-# initialise positions and velocities
-for i in range(200):
-    radius = size_sun/2*np.random.uniform(low=0, high=0.5)
-    pos = np.zeros(3)
-    while np.sum(pos**2) < 0.25:
-        pos = max_dim*np.random.uniform(low=-1, high=1, size=3)
-        pos[2] = 0
+    # initialise positions and velocities
+    for i in range(200):
+        radius = size_sun/2*np.random.uniform(low=0, high=0.5)
+        pos = np.zeros(3)
+        while np.sum(pos**2) < 0.25:
+            pos = max_dim*np.random.uniform(low=-1, high=1, size=3)
+            pos[2] = 0
 
-    v0 = np.random.uniform(low=0, high=0.05)
-    vel = v0*np.array([-pos[1], pos[0], 0])/np.sum(pos**2)**0.5
-    obj = Object(str(i), radius, 'black', pos, vel)
-    system.add_object(obj)
+        v0 = np.random.uniform(low=0, high=0.05)
+        vel = v0*np.array([-pos[1], pos[0], 0])/np.sum(pos**2)**0.5
+        obj = Object(str(i), radius, 'black', pos, vel)
+        system.add_object(obj)
 
+    def animate(i):
+        return system.update()
 
-def animate(i):
-    return system.update()
-
-
-ani = animation.FuncAnimation(fig, animate, repeat=True, frames=200, blit=True, interval=10,)
-plt.show()
+    ani = animation.FuncAnimation(fig, animate, repeat=True, frames=200, blit=True, interval=10,)
+    plt.show()
