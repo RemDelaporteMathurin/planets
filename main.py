@@ -58,20 +58,25 @@ class SolarSystem:
         self.mass = mass
 
     def fuse_objects(self):
-        for p1 in self.objects:
-            for p2 in self.objects:
-                if p2 != p1:
-                    u = p2.r - p1.r
-                    u_norm = np.sum(u**2)**0.5
-                    scaling_factor = 0.06/28
-                    if u_norm <= (p1.rad + p2.rad)*scaling_factor:
-                        meq, veq = momentum_conservation(
-                            p1.v, p2.v,
-                            np.pi*p1.rad**2, np.pi*p2.rad**2)
-                        p1.rad = (meq/np.pi)**0.5
-                        p1.v = veq
-                        p2.rad = 0
-                        self.objects.remove(p2)
+        objects_to_fuse = self.objects[:]
+        scaling_factor = 0.06/28
+        positions = [p.r for p in objects_to_fuse]
+        while len(objects_to_fuse) > 1:
+            p1 = objects_to_fuse[0]
+            positions.pop(0)
+            index_closest, distance_closest = closest_node(p1.r, positions)
+            p2 = objects_to_fuse[1 + index_closest]
+            if distance_closest <= (p1.rad + p2.rad)*scaling_factor:
+                meq, veq = momentum_conservation(
+                    p1.v, p2.v,
+                    np.pi*p1.rad**2, np.pi*p2.rad**2)
+                p1.rad = (meq/np.pi)**0.5
+                p1.v = veq
+                p2.rad = 0
+                self.objects.remove(p2)
+                objects_to_fuse.remove(p2)
+                positions.pop(index_closest)
+            objects_to_fuse.remove(p1)
 
     def clean_system(self):
         bound = 2
@@ -86,6 +91,12 @@ def momentum_conservation(v1, v2, m1, m2):
     return meq, veq
 
 
+def closest_node(node, nodes):
+    dist_2 = np.sum((np.asarray(nodes) - node)**2, axis=1)**0.5
+    i = np.argmin(dist_2)
+    return i, dist_2[i]
+
+
 if __name__ == "__main__":
     fig = plt.figure(figsize=[6, 6])
     max_dim = 1
@@ -96,8 +107,8 @@ if __name__ == "__main__":
     system = SolarSystem(Sun)
 
     # initialise positions and velocities
-    for i in range(200):
-        radius = size_sun/2*np.random.uniform(low=0, high=0.5)
+    for i in range(800):
+        radius = size_sun/2*np.random.uniform(low=0, high=0.25)
         pos = np.zeros(3)
         while np.sum(pos**2) < 0.25:
             pos = max_dim*np.random.uniform(low=-1, high=1, size=3)
