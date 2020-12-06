@@ -4,14 +4,15 @@ import matplotlib.animation as animation
 
 
 class Object:
-    def __init__(self, name, rad, color, r, v):
+    def __init__(self, name, rad, colour, r, v):
         self.name = name
         self.r = np.array(r, dtype=np.float)
         self.v = np.array(v, dtype=np.float)
         self.plot = ax.scatter(
-            r[0], r[1], color=color, s=rad**2,
+            r[0], r[1], color=colour, s=rad**2,
             edgecolors=None, zorder=10)
         self.rad = rad
+        self.colour = colour
 
 
 class SolarSystem:
@@ -42,6 +43,7 @@ class SolarSystem:
             p.v += acc * dt
             p.plot.set_offsets(p.r[:2])
             p.plot.set_sizes([p.rad**2])
+            p.plot.set_color(p.colour)
             plots.append(p.plot)
         self.fuse_objects()
 
@@ -67,12 +69,16 @@ class SolarSystem:
             index_closest, distance_closest = closest_node(p1.r, positions)
             p2 = objects_to_fuse[1 + index_closest]
             if distance_closest <= (p1.rad + p2.rad)*scaling_factor:
+                m1 = np.pi*p1.rad**2
+                m2 = np.pi*p2.rad**2
                 meq, veq = momentum_conservation(
                     p1.v, p2.v,
-                    np.pi*p1.rad**2, np.pi*p2.rad**2)
+                    m1, m2)
                 p1.rad = (meq/np.pi)**0.5
                 p1.v = veq
                 p2.rad = 0
+                p1.colour = (m1*p1.colour + m2*p2.colour)/meq
+
                 self.objects.remove(p2)
                 objects_to_fuse.remove(p2)
                 positions.pop(index_closest)
@@ -103,7 +109,7 @@ if __name__ == "__main__":
     ax = plt.axes([0., 0., 1., 1.], xlim=(-max_dim, max_dim), ylim=(-max_dim, max_dim))
     ax.set_aspect('equal')
     size_sun = 28
-    Sun = Object("sun", rad=size_sun, color='tab:orange', r=[0, 0, 0], v=[0, 0, 0])
+    Sun = Object("sun", rad=size_sun, colour='tab:orange', r=[0, 0, 0], v=[0, 0, 0])
     system = SolarSystem(Sun)
 
     # initialise positions and velocities
@@ -116,7 +122,8 @@ if __name__ == "__main__":
 
         v0 = np.random.uniform(low=0, high=0.05)
         vel = v0*np.array([-pos[1], pos[0], 0])/np.sum(pos**2)**0.5
-        obj = Object(str(i), radius, 'black', pos, vel)
+        colour = np.random.uniform(low=0, high=1, size=3)
+        obj = Object(str(i), radius, colour, pos, vel)
         system.add_object(obj)
 
     def animate(i):
