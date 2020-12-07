@@ -27,11 +27,11 @@ class SolarSystem:
         self.mass = 0
         self.masssstamp = \
             ax.text(
-                .03, .94, 'Mass: ', color='b',
+                .03, .94, 'Mass: ', color='tab:blue',
                 transform=ax.transAxes, fontsize='x-large')
         self.nb_objectsstamp = \
             ax.text(
-                .03, .84, 'Objects: ', color='b',
+                .03, .84, 'Objects: ', color='tab:blue',
                 transform=ax.transAxes, fontsize='x-large')
         self.plot_orbitals = False
         self.plot = plot
@@ -123,11 +123,12 @@ def closest_node(node, nodes):
     return i, dist_2[i]
 
 
+fig = plt.figure(figsize=[6, 6])
+max_dim = 1
+ax = plt.axes([0., 0., 1., 1.], xlim=(-max_dim, max_dim), ylim=(-max_dim, max_dim))
+ax.set_aspect('equal')
+
 if __name__ == "__main__":
-    fig = plt.figure(figsize=[6, 6])
-    max_dim = 1
-    ax = plt.axes([0., 0., 1., 1.], xlim=(-max_dim, max_dim), ylim=(-max_dim, max_dim))
-    ax.set_aspect('equal')
     size_sun = 28
     Sun = Object("sun", rad=size_sun, colour='tab:orange', r=[0, 0, 0], v=[0, 0, 0])
     system = SolarSystem(Sun)
