@@ -13,6 +13,9 @@ class Object:
             edgecolors=None, zorder=10)
         self.rad = rad
         self.colour = colour
+        self.xs = []
+        self.ys = []
+        self.line, = ax.plot([], [], color=colour, linewidth=1.4, alpha=0.3)
 
 
 class SolarSystem:
@@ -29,6 +32,7 @@ class SolarSystem:
             ax.text(
                 .03, .84, 'Objects: ', color='b',
                 transform=ax.transAxes, fontsize='x-large')
+        self.plot_orbitals = False
 
     def add_object(self, object):
         self.objects.append(object)
@@ -37,7 +41,17 @@ class SolarSystem:
         dt = 0.5
         self.time += dt
         plots = []
+        lines = []
+        if len(self.objects) < 40:
+            self.plot_orbitals = True
         for p in self.objects:
+            if self.plot_orbitals:
+                p.xs.append(p.r[0])
+                p.ys.append(p.r[1])
+                p.line.set_xdata(p.xs[-500:])
+                p.line.set_ydata(p.ys[-500:])
+                p.line.set_color(p.colour)
+                lines.append(p.line)
             p.r += p.v * dt
             acc = -2.959e-4 * p.r / np.sum(p.r**2)**(3./2)
             p.v += acc * dt
@@ -51,7 +65,7 @@ class SolarSystem:
         self.compute_mass()
         self.masssstamp.set_text('Mass: {:.2f}'.format(self.mass))
         self.nb_objectsstamp.set_text('Objects: {}'.format(len(self.objects)))
-        return plots + [self.masssstamp, self.nb_objectsstamp]
+        return plots + lines + [self.masssstamp, self.nb_objectsstamp]
 
     def compute_mass(self):
         mass = 0
@@ -74,6 +88,7 @@ class SolarSystem:
                 meq, veq = momentum_conservation(
                     p1.v, p2.v,
                     m1, m2)
+                p1.r = (m1*p1.r + m2*p2.r)/meq
                 p1.rad = (meq/np.pi)**0.5
                 p1.v = veq
                 p2.rad = 0
@@ -120,7 +135,9 @@ if __name__ == "__main__":
             pos = max_dim*np.random.uniform(low=-1, high=1, size=3)
             pos[2] = 0
         dist = np.linalg.norm(pos)
-        v0 = np.random.uniform(low=0.015, high=0.02)/(dist)**0.5
+        range_vel = 0.005
+        v0 = np.random.uniform(
+            low=0.0175 - range_vel/2, high=0.0175 + range_vel/2)/(dist)**0.5
         vel = v0*np.array([-pos[1], pos[0], 0])/np.sum(pos**2)**0.5
         colour = np.random.uniform(low=0, high=1, size=3)
         obj = Object(str(i), radius, colour, pos, vel)
