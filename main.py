@@ -9,7 +9,7 @@ class Object:
         self.r = np.array(r, dtype=np.float)
         self.v = np.array(v, dtype=np.float)
         self.plot = ax.scatter(
-            r[0], r[1], color=colour, s=rad**2,
+            [], [], color=colour, s=rad**2,
             edgecolors=None, zorder=10)
         self.rad = rad
         self.colour = colour
@@ -19,8 +19,9 @@ class Object:
 
 
 class SolarSystem:
-    def __init__(self, thesun):
+    def __init__(self, thesun, plot=True):
         self.thesun = thesun
+        self.thesun.plot.set_offsets(self.thesun.r[:2])
         self.objects = []
         self.time = 0
         self.mass = 0
@@ -33,6 +34,7 @@ class SolarSystem:
                 .03, .84, 'Objects: ', color='b',
                 transform=ax.transAxes, fontsize='x-large')
         self.plot_orbitals = False
+        self.plot = plot
 
     def add_object(self, object):
         self.objects.append(object)
@@ -42,29 +44,32 @@ class SolarSystem:
         self.time += dt
         plots = []
         lines = []
+        self.fuse_objects()
+
         if len(self.objects) < 40:
             self.plot_orbitals = True
         for p in self.objects:
-            if self.plot_orbitals:
-                p.xs.append(p.r[0])
-                p.ys.append(p.r[1])
-                p.line.set_xdata(p.xs[-500:])
-                p.line.set_ydata(p.ys[-500:])
-                p.line.set_color(p.colour)
-                lines.append(p.line)
             p.r += p.v * dt
             acc = -2.959e-4 * p.r / np.sum(p.r**2)**(3./2)
             p.v += acc * dt
-            p.plot.set_offsets(p.r[:2])
-            p.plot.set_sizes([p.rad**2])
-            p.plot.set_color(p.colour)
-            plots.append(p.plot)
-        self.fuse_objects()
+            if self.plot:
+                if self.plot_orbitals:
+                    p.xs.append(p.r[0])
+                    p.ys.append(p.r[1])
+                    p.line.set_xdata(p.xs[-500:])
+                    p.line.set_ydata(p.ys[-500:])
+                    p.line.set_color(p.colour)
+                    lines.append(p.line)
+                p.plot.set_offsets(p.r[:2])
+                p.plot.set_sizes([p.rad**2])
+                p.plot.set_color(p.colour)
+                plots.append(p.plot)
 
         self.clean_system()
         self.compute_mass()
-        self.masssstamp.set_text('Mass: {:.2f}'.format(self.mass))
-        self.nb_objectsstamp.set_text('Objects: {}'.format(len(self.objects)))
+        if self.plot:
+            self.masssstamp.set_text('Mass: {:.2f}'.format(self.mass))
+            self.nb_objectsstamp.set_text('Objects: {}'.format(len(self.objects)))
         return plots + lines + [self.masssstamp, self.nb_objectsstamp]
 
     def compute_mass(self):
@@ -91,9 +96,9 @@ class SolarSystem:
                 p1.r = (m1*p1.r + m2*p2.r)/meq
                 p1.rad = (meq/np.pi)**0.5
                 p1.v = veq
-                p2.rad = 0
                 p1.colour = (m1*p1.colour + m2*p2.colour)/meq
 
+                p2.plot.remove()
                 self.objects.remove(p2)
                 objects_to_fuse.remove(p2)
                 positions.pop(index_closest)
