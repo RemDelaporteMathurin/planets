@@ -35,6 +35,7 @@ class SolarSystem:
                 transform=ax.transAxes, fontsize='x-large')
         self.plot_orbitals = False
         self.plot = plot
+        self.fusion_velocity_threshold = 0.007
 
     def add_object(self, object):
         self.objects.append(object)
@@ -90,16 +91,22 @@ class SolarSystem:
             if distance_closest <= (p1.rad + p2.rad)*scaling_factor:
                 m1 = np.pi*p1.rad**2
                 m2 = np.pi*p2.rad**2
-                meq, veq = momentum_conservation(
-                    p1.v, p2.v,
-                    m1, m2)
-                p1.r = (m1*p1.r + m2*p2.r)/meq
-                p1.rad = (meq/np.pi)**0.5
-                p1.v = veq
-                p1.colour = (m1*p1.colour + m2*p2.colour)/meq
+                if np.linalg.norm(p2.v - p1.v) < self.fusion_velocity_threshold or \
+                   distance_closest <= (p1.rad + p2.rad)*scaling_factor/2:
+                    meq, veq = momentum_conservation(
+                        p1.v, p2.v,
+                        m1, m2)
+                    p1.r = (m1*p1.r + m2*p2.r)/meq
+                    p1.rad = (meq/np.pi)**0.5
+                    p1.v = veq
+                    p1.colour = (m1*p1.colour + m2*p2.colour)/meq
 
-                p2.plot.remove()
-                self.objects.remove(p2)
+                    p2.plot.remove()
+                    self.objects.remove(p2)
+                else:
+                    new_vs = elastic_collision((p1.r, p2.r), (p1.v, p2.v), (m1, m2))
+                    p1.v = new_vs[0]
+                    p2.v = new_vs[1]
                 objects_to_fuse.remove(p2)
                 positions.pop(index_closest)
             objects_to_fuse.remove(p1)
@@ -115,6 +122,16 @@ def momentum_conservation(v1, v2, m1, m2):
     meq = m1 + m2
     veq = v1 / (1 + m2/m1) + v2 / (1 + m1/m2)
     return meq, veq
+
+
+def elastic_collision(xs, vs, ms):
+    x1, x2 = xs
+    v1, v2 = vs
+    m1, m2 = ms
+
+    v_1_new = v1 - 2*m2/(m1+m2) * (np.sum((v1-v2)*(x1-x2)))/(np.linalg.norm(x1-x2)**2)*(x1-x2)
+    v_2_new = v2 - 2*m1/(m1+m2) * (np.sum((v2-v1)*(x2-x1)))/(np.linalg.norm(x2-x1)**2)*(x2-x1)
+    return v_1_new, v_2_new
 
 
 def closest_node(node, nodes):
@@ -134,8 +151,8 @@ if __name__ == "__main__":
     system = SolarSystem(Sun)
 
     # initialise positions and velocities
-    for i in range(1000):
-        radius = size_sun/2*np.random.uniform(low=0, high=0.25)
+    for i in range(100):
+        radius = size_sun/2*np.random.uniform(low=0, high=0.7)
         pos = np.zeros(3)
         while np.sum(pos**2) < 0.25:
             pos = max_dim*np.random.uniform(low=-1, high=1, size=3)
