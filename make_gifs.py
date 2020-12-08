@@ -35,16 +35,16 @@ def create_gif(nb_of_objects, filename):
         print(len(system.objects), end='\r')
         system.update()
     system.plot = True
-    ani = animation.FuncAnimation(fig, animate, repeat=False, frames=600, blit=True, interval=20,)
+    ani = animation.FuncAnimation(fig, animate, repeat=False, frames=10, blit=True, interval=20,)
     ani.save(filename, writer='imagemagick', fps=60)
 
 
 print('Creating early ages animation')
 create_gif(1000, 'docs/animation_early.gif')
 
-print('Creating mid ages animation')
-create_gif(50, 'docs/animation_mid.gif')
+# print('Creating mid ages animation')
+# create_gif(50, 'docs/animation_mid.gif')
 
 
-print('Creating stable animation')
-create_gif(10, 'docs/animation_stable.gif')
+# print('Creating stable animation')
+# create_gif(10, 'docs/animation_stable.gif')
