@@ -3,7 +3,7 @@
 ## Installation
 To start using this package, you first install the dependencies:
 
-    pip install requirements.txt
+    pip install -r requirements.txt
 
 Alternatively, you can build and run a Docker container
 
