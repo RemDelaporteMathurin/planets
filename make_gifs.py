@@ -35,7 +35,7 @@ def create_gif(nb_of_objects, filename):
         print(len(system.objects), end='\r')
         system.update()
     system.plot = True
-    ani = animation.FuncAnimation(fig, animate, frames=300)
+    ani = animation.FuncAnimation(fig, animate,  blit=True, frames=300)
     ani.save(filename, writer='imagemagick', fps=30)
 
 
