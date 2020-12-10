@@ -35,9 +35,10 @@ def create_gif(nb_of_objects, filename):
         print(len(system.objects), end='\r')
         system.update()
     system.plot = True
-    ani = animation.FuncAnimation(fig, animate,  blit=True, frames=300)
     ani.save(filename, writer='imagemagick', fps=30)
 
+
+ani = animation.FuncAnimation(fig, animate,  blit=True, frames=300)
 
 print('Creating early ages animation')
 create_gif(1000, 'docs/animation_early.gif')

@@ -45,6 +45,7 @@ class SolarSystem:
         self.time += dt
         plots = []
         lines = []
+        self.fuse_objects()
 
         if len(self.objects) < 40:
             self.plot_orbitals = True
@@ -65,7 +66,6 @@ class SolarSystem:
                 p.plot.set_color(p.colour)
                 plots.append(p.plot)
 
-        self.fuse_objects()
         self.clean_system()
         self.compute_mass()
         if self.plot:
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     system = SolarSystem(Sun)
 
     # initialise positions and velocities
-    for i in range(1000):
+    for i in range(100):
         radius = size_sun/2*np.random.uniform(low=0, high=0.25)
         pos = np.zeros(3)
         while np.sum(pos**2) < 0.25:
